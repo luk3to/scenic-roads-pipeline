@@ -1,0 +1,53 @@
+parameters:
+    app.name: 'Scenic Roads Pipeline'
+    app.version: '1.0.0'
+    app.contact_email: '%env(APP_CONTACT_EMAIL)%'
+    app.user_agent: '%app.name%/%app.version% (mailto:%app.contact_email%)'
+    app.output_path: '%kernel.project_dir%/output'
+    app.input_path: '%kernel.project_dir%/input'
+    ai.enabled: '%env(bool:AI_ENABLED)%'
+    ai.api_uri: '%env(AI_API_URI)%'
+    ai.model: '%env(AI_MODEL)%'
+    ai.max_tokens: '%env(int:AI_MAX_TOKENS)%'
+    ai.temperature: '%env(float:AI_TEMPERATURE)%'
+
+services:
+    _defaults:
+        autowire: true
+        autoconfigure: true
+        public: true
+        bind:
+            $appName: '%app.name%'
+            $appVersion: '%app.version%'
+            $userAgent: '%app.user_agent%'
+            $projectDir: '%kernel.project_dir%'
+            $outputPath: '%app.output_path%'
+            $inputPath: '%app.input_path%'
+            $aiEnabled: '%ai.enabled%'
+
+    _instanceof:
+        ScenicRoads\Source\SourceInterface:
+            tags: ['app.road_source']
+
+    ScenicRoads\:
+        resource: '../src/'
+        exclude: '../src/{Model,Http}'
+        
+    ScenicRoads\Http\HttpClientFactory: ~
+
+    ScenicRoads\Service\AIService:
+        arguments:
+            $baseUri: '%ai.api_uri%'
+            $model: '%ai.model%'
+            $maxTokens: '%ai.max_tokens%'
+            $temperature: '%ai.temperature%'
+
+    # Road data sources
+    ScenicRoads\Source\ArcGisSource:
+        arguments:
+            $activeLayers: [1, 2, 6]
+
+    # Command
+    ScenicRoads\Command\ProcessScenicRoadsCommand:
+        arguments:
+            $sources: !tagged_iterator app.road_source

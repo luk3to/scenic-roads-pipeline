@@ -1,0 +1,39 @@
+{
+	"name": "luk3to/scenic-roads-pipeline",
+	"description": "A PHP-based pipeline that extracts raw scenic road data from various sources (US DOT ArcGIS, Local JSON), enriches it and exports structured data.",
+	"type": "project",
+	"license": "MIT",
+	"require": {
+		"php": "^8.1",
+		"guzzlehttp/guzzle": "^7.0",
+		"vlucas/phpdotenv": "^5.6",
+		"symfony/console": "^8.0",
+		"symfony/cache": "^8.0",
+		"spatie/guzzle-rate-limiter-middleware": "^2.1",
+		"symfony/dependency-injection": "^8.0",
+		"symfony/config": "^8.0",
+		"symfony/yaml": "^8.0",
+		"symfony/finder": "^8.0"
+	},
+	"autoload": {
+		"psr-4": {
+			"ScenicRoads\\": "src/"
+		}
+	},
+	"keywords": [
+		"php",
+		"cli",
+		"pipeline",
+		"geospatial",
+		"arcgis",
+		"wikipedia-api",
+		"data-transformation",
+		"scenic-roads"
+	],
+	"authors": [
+		{
+			"name": "Lukáš Török",
+			"email": "lukas.torok@lumot.eu"
+		}
+	]
+}

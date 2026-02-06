@@ -1,0 +1,1 @@
+php bin/console.php app:roads:enrich
