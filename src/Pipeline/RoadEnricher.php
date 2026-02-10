@@ -7,7 +7,9 @@ use ScenicRoads\Service\WikidataService;
 use ScenicRoads\Service\AIService;
 use ScenicRoads\Model\RoadDTO;
 use ScenicRoads\Model\RawRoadData;
+use ScenicRoads\Service\GeometryOptimizer;
 use ScenicRoads\Service\MediaService;
+use ScenicRoads\Service\OpenElevationService;
 use ScenicRoads\Source\SourceInterface;
 use ScenicRoads\Utils\JsonHandler;
 use Symfony\Component\Console\Style\SymfonyStyle;
@@ -25,9 +27,12 @@ class RoadEnricher
         private WikidataService $wikidata,
         private MediaService $media,
         private AIService $aiService,
+        private OpenElevationService $elevationService,
+        private GeometryOptimizer $geometryOptimizer,
         private JsonHandler $jsonHandler,
         private string $outputPath,
-        private bool $aiEnabled
+        private bool $aiEnabled,
+        private bool $elevationEnabled
     ) {}
 
     /**
@@ -68,7 +73,7 @@ class RoadEnricher
             // Iterate and enrich each individual road
             $outputData = [];
             foreach ($rawDataItems as $index => $rawRoad) {
-                $outputData[] = $this->processRoad($rawRoad, $source->id, $location, $index, count($rawDataItems));
+                $outputData[] = $this->processRoad($rawRoad, $source->id, $location, $index + 1, count($rawDataItems));
             }
 
             $filePath = $this->createOutputFilePath($source, $targetId);
@@ -114,11 +119,21 @@ class RoadEnricher
             $roadName = $this->aiService->getCleanName($roadData, $stateName, $countryIso2);
         }
 
+        // Normalize geometry (Sort & Stitch)
+        $this->log("<comment>{$roadName}</comment>: ({$index}/{$total}) Sorting and stitching geometry segments...");
+        $geometry = $this->geometryOptimizer->optimize($roadData->geometry);
+
+        // Inject elevation data into road geometry
+        if ($this->elevationEnabled) {
+            $this->log("<comment>{$roadName}</comment>: ({$index}/{$total}) Fetching elevation data...");
+            $geometry = $this->elevationService->enrichGeometry($geometry);
+        }
+
         // Initialize DTO with core data
         $road = RoadDTO::fromArray([
             ...$location,
             'name' => $roadName,
-            'geom' => $roadData->geometry,
+            'geom' => $geometry,
             'source' => $sourceId,
             'sourceUrl' =>  ''
         ]);

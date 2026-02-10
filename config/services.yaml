@@ -10,6 +10,8 @@ parameters:
     ai.model: '%env(AI_MODEL)%'
     ai.max_tokens: '%env(int:AI_MAX_TOKENS)%'
     ai.temperature: '%env(float:AI_TEMPERATURE)%'
+    open_elevation.base_uri: '%env(OPEN_ELEVATION_URI)%'
+    open_elevation.enabled: '%env(OPEN_ELEVATION_ENABLED)%'
 
 services:
     _defaults:
@@ -24,6 +26,7 @@ services:
             $outputPath: '%app.output_path%'
             $inputPath: '%app.input_path%'
             $aiEnabled: '%ai.enabled%'
+            $elevationEnabled: '%open_elevation.enabled%'
 
     _instanceof:
         ScenicRoads\Source\SourceInterface:
@@ -42,7 +45,10 @@ services:
             $maxTokens: '%ai.max_tokens%'
             $temperature: '%ai.temperature%'
 
-    # Road data sources
+    ScenicRoads\Service\OpenElevationService:
+        arguments:
+            $baseUri: '%open_elevation.base_uri%'
+
     ScenicRoads\Source\ArcGisSource:
         arguments:
             $activeLayers: [1, 2, 6]
